@@ -1,9 +1,12 @@
 from typing import Any, Type, get_args, get_origin
 from pydantic import BaseModel
-import random
 import datetime
 
-from .string import check_string
+from .providers.string_provider import StringProvider
+from .providers.number_provider import NumberProvider
+from .providers.date_provider import DateProvider
+from .providers.bool_provider import BoolProvider
+from .providers.payment_provider import PaymentProvider
 
 
 async def generate(model_class: Type[BaseModel]) -> BaseModel:
@@ -18,26 +21,35 @@ async def generate(model_class: Type[BaseModel]) -> BaseModel:
     return model_class(**values)
 
 
-async def generate_field(field_type: any, field_name: str = "") -> Any:
-    """Returns a dummy value based on the type."""
-
+async def generate_field(field_type: Any, field_name: str = "") -> Any:
+    """Returns a dummy value based on the type and field name."""
     if field_type is str:
-        return await check_string(field_name)
-    elif field_type is int:
-        return random.randint(0, 100)
-    elif field_type is float:
-        return round(random.uniform(1.0, 100.0), 2)
-    elif field_type is bool:
-        return random.choice([True, False])
-    elif field_type is datetime.date:
-        return datetime.date.today()
-    elif get_origin(field_type) is list:
+        fn = field_name.lower()
+        if "credit" in fn or "card" in fn or fn.endswith("iban"):
+            return PaymentProvider().credit_card_number()
+        return StringProvider().handle(fn)
+
+    if field_type is int:
+        return NumberProvider().random_int()
+
+    if field_type is float:
+        return NumberProvider().random_float()
+
+    if field_type is bool:
+        return BoolProvider().random_bool()
+
+    if field_type is datetime.date:
+        return DateProvider().today()
+
+    if get_origin(field_type) is list:
         inner = get_args(field_type)[0]
-        return [generate_field(inner) for _ in range(3)]
-    elif await issubclass_safe(field_type, BaseModel):
-        return generate(field_type)
-    else:
-        return None  # Fallback if type is unknown
+        return [await generate_field(inner, field_name) for _ in range(3)]
+
+    if issubclass_safe(field_type, BaseModel):
+        return await generate(field_type)
+
+    # Fallback
+    return None
 
 
 async def get_model_fields(model_class: Type[BaseModel]) -> dict[str, Any]:
