@@ -36,7 +36,8 @@ jobs:
       - name: Publish to PyPI
         env:
           PDM_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-        run: pdm publish
+        run: |
+          pdm publish --token ${{ secrets.PYPI_API_TOKEN }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
