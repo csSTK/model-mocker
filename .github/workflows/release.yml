@@ -1,0 +1,46 @@
+name: Publish Python 🐍📦
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    name: Build, Publish to PyPI & Create GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PDM
+        run: |
+          curl -sSL https://pdm.fming.dev/install-pdm.py | python3
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: pdm install
+
+      - name: Build the package
+        run: pdm build
+
+      - name: Publish to PyPI
+        env:
+          PDM_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: pdm publish
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
