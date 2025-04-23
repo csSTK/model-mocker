@@ -1,4 +1,4 @@
-from typing import Any, Type, get_args, get_origin
+from typing import Any, Type, Union, get_args, get_origin
 from pydantic import BaseModel
 import datetime
 
@@ -54,6 +54,11 @@ async def generate_field(field_type: Any, field_name: str = "") -> Any:
 
 async def get_model_fields(model_class: Type[BaseModel]) -> dict[str, Any]:
     """Abstraction layer for Pydantic v1 and v2 fields."""
+    if model_class is None or not isinstance(model_class, type):
+        raise TypeError(
+            f"Expected a Pydantic model class, got {type(model_class).__name__}"
+        )
+
     if hasattr(model_class, "model_fields"):
         return model_class.model_fields  # Pydantic v2
     elif hasattr(model_class, "__fields__"):
@@ -64,12 +69,24 @@ async def get_model_fields(model_class: Type[BaseModel]) -> dict[str, Any]:
 
 async def get_field_type(field: Any) -> Any:
     """Extracts the type of a Pydantic field."""
+    field_type = None
+
     if hasattr(field, "annotation"):  # Pydantic v2
-        return field.annotation
+        field_type = field.annotation
     elif hasattr(field, "outer_type_"):  # Pydantic v1
-        return field.outer_type_
+        field_type = field.outer_type_
     else:
-        return field
+        field_type = field
+
+    # Handle Optional[Type] / Union[Type, None]
+    if hasattr(field_type, "__origin__") and field_type.__origin__ is Union:
+        args = field_type.__args__
+        # Find the non-None type in the Union
+        for arg in args:
+            if arg is not type(None):
+                return arg
+
+    return field_type
 
 
 async def issubclass_safe(cls: Any, base: type) -> bool:

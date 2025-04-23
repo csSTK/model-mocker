@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 from model_mocker.core import generate
 import asyncio
@@ -9,7 +10,7 @@ class User(BaseModel):
     phone: str
     address: str
     age: int
-    is_active: bool
+    is_active: Optional[bool] | None
 
 
 async def main():
