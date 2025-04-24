@@ -1,7 +1,7 @@
 [project]
 name = "model-mocker"
 version = "0.1.1"
-description = "Default template for PDM package"
+description = "Create mock data from Pydantic models"
 authors = [
     {name = "Paul", email = "paulotto.bethge@gmail.com"},
 ]
