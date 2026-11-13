@@ -1,0 +1,28 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": [
+		"config:recommended",
+		"group:allNonMajor",
+		":maintainLockFilesMonthly",
+		"schedule:weekends",
+		":disableDependencyDashboard"
+	],
+	"labels": ["dependencies"],
+	"minimumReleaseAge": "3 days",
+	"prHourlyLimit": 5,
+	"prConcurrentLimit": 5,
+	"platformAutomerge": false,
+	"automergeStrategy": "squash",
+	"packageRules": [
+		{
+			"description": "Patch updates and digest pins merge themselves once CI is green",
+			"matchUpdateTypes": ["patch", "pin", "digest", "lockFileMaintenance"],
+			"automerge": true
+		}
+	],
+	"vulnerabilityAlerts": {
+		"labels": ["dependencies", "security"],
+		"schedule": ["at any time"],
+		"minimumReleaseAge": null
+	}
+}

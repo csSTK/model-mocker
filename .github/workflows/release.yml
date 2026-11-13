@@ -16,20 +16,23 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
 
       - name: Install PDM
         run: |
-          curl -sSL https://pdm.fming.dev/install-pdm.py | python3
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          python -m pip install --upgrade pip
+          pip install pdm
 
       - name: Install dependencies
         run: pdm install
+
+      - name: Run tests
+        run: pdm run pytest
 
       - name: Build the package
         run: pdm build
@@ -40,7 +43,7 @@ jobs:
         run: pdm publish
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
